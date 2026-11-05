@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#if (defined(HAS_WIO_TRACKER_L2) || defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50)) && defined(ESP32)
+#if (defined(HAS_WIO_TRACKER_L2) || defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50)) && defined(ESP32)
 
 #include <Arduino.h>
 #include <Wire.h>
@@ -8,7 +8,10 @@
 #include <helpers/input/HeltecV4CapTouch.h>
 #include <helpers/ui/MomentaryButton.h>
 
-#if defined(HAS_CROWPANEL_35)
+#if defined(HAS_CROWPANEL_28)
+  #include <CrowPanel28Display.h>
+  extern CrowPanel28Display display;
+#elif defined(HAS_CROWPANEL_35)
   #include <CrowPanel35Display.h>
   extern CrowPanel35Display display;
 #elif defined(HAS_CROWPANEL_50)
@@ -65,12 +68,16 @@ void pollTask(void*) {
 }
 
 bool heltecV4CapTouchBegin() {
-#if defined(HAS_CROWPANEL_35)
+#if defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
   static uint32_t nextProbeMs = 0;
   const uint32_t now = millis();
   if (nextProbeMs && (int32_t)(now - nextProbeMs) < 0) return false;
   nextProbeMs = now + 1000;
-  Wire.beginTransmission(0x5D);
+#if defined(HAS_CROWPANEL_28)
+  Wire.beginTransmission(0x38);   // FT6336U
+#else
+  Wire.beginTransmission(0x5D);   // GT911
+#endif
   if (Wire.endTransmission() != 0) return false;
 #elif defined(HAS_CROWPANEL_50)
   // The display reset the GT911 and recorded where it answered (0x5D or 0x14).
@@ -101,7 +108,9 @@ bool heltecV4CapTouchPopSwipe(int8_t* x, int8_t* y) {
 bool heltecV4CapTouchStartBackgroundPoll(uint32_t periodMs) {
   if (s_async || !s_ready) return false;
   s_periodMs = periodMs < 4 ? 4 : (periodMs > 100 ? 100 : periodMs);
-#if defined(HAS_CROWPANEL_35)
+#if defined(HAS_CROWPANEL_28)
+  const char* name = "crow28_touch";
+#elif defined(HAS_CROWPANEL_35)
   const char* name = "crow_touch";
 #elif defined(HAS_CROWPANEL_50)
   const char* name = "crow50_touch";
@@ -117,7 +126,9 @@ void heltecV4CapTouchSetRotation(uint8_t) {}
 void heltecV4CapTouchSetPointRotation(uint8_t) {}
 void heltecV4CapTouchSetSlowPoll(bool slow) { s_periodMs = slow ? 50 : 8; }
 const char* heltecV4CapTouchDebug() {
-#if defined(HAS_CROWPANEL_35)
+#if defined(HAS_CROWPANEL_28)
+  return s_ready ? "CrowPanel Advance 2.8" : "CrowPanel 2.8 (FT6336U) touch not responding";
+#elif defined(HAS_CROWPANEL_35)
   return s_ready ? "CrowPanel Advance 3.5 GT911" : "CrowPanel GT911 not responding at 0x5D";
 #elif defined(HAS_CROWPANEL_50)
   return s_ready ? "CrowPanel Advance 5.0 GT911" : "CrowPanel 5.0 GT911 not responding at 0x5D/0x14";

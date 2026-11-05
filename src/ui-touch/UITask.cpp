@@ -85,7 +85,9 @@ static void* wadaMp3Scratch() { return s_wada_mp3_scratch; }
   static inline esp_err_t esp_core_dump_image_erase() { return ESP_FAIL; }
   #endif
 #endif
-#if defined(HAS_CROWPANEL_35)
+#if defined(HAS_CROWPANEL_28)
+  #include <CrowPanel28SD.h>
+#elif defined(HAS_CROWPANEL_35)
   #include <CrowPanel35SD.h>
 #elif defined(HAS_TDECK_GT911) || defined(HAS_TDECK_PRO) || defined(HAS_THINKNODE_M9) || defined(HELTEC_LORA_V4_R8)
   #include <SD.h>             // microSD — T-Deck/M9 on the LoRa SPI, V4-R8 on the TFT SPI
@@ -245,6 +247,8 @@ static_assert(ChannelSenderSplit::kMaxWireName >= (size_t)UITask::MAX_SENDER_NAM
   #elif defined(HAS_WIO_TRACKER_L2)
     #include <WioTrackerL2Display.h>
     #include <WioTrackerL2Io.h>
+  #elif defined(HAS_CROWPANEL_28)
+    #include <CrowPanel28Display.h>
   #elif defined(HAS_CROWPANEL_35)
     #include <CrowPanel35Display.h>
   #elif defined(HAS_CROWPANEL_50)
@@ -323,6 +327,8 @@ static_assert(ChannelSenderSplit::kMaxWireName >= (size_t)UITask::MAX_SENDER_NAM
     extern IndicatorDisplay display;
   #elif defined(HAS_WIO_TRACKER_L2)
     extern WioTrackerL2Display display;
+  #elif defined(HAS_CROWPANEL_28)
+    extern CrowPanel28Display display;
   #elif defined(HAS_CROWPANEL_35)
     extern CrowPanel35Display display;
   #elif defined(HAS_CROWPANEL_50)
@@ -4094,7 +4100,7 @@ void sdMountDiagSetMounted(bool mounted, uint32_t hz) {
 }
 
 static void sdDiagClockText(uint32_t hz, char* out, size_t cap) {
-#if defined(HAS_CROWPANEL_35)
+#if defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
   (void)hz;
   snprintf(out, cap, "software SPI");
 #else
@@ -6046,7 +6052,7 @@ static void lvglFlushImpl(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_col
 static void applyHardwarePanelRotation(uint8_t lvgl_rot) {
   if (lvgl_rot == LV_DISP_ROT_90)       display.setDisplayRotation(1);
   else if (lvgl_rot == LV_DISP_ROT_270) display.setDisplayRotation(3);
-#if defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(HAS_WIO_TRACKER_L2)
+#if defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(HAS_WIO_TRACKER_L2)
   else if (lvgl_rot == LV_DISP_ROT_180) display.setDisplayRotation(2);
 #elif defined(HELTEC_LORA_V4_R8)
   // The R8's LovyanGFX panel is portrait at rotation 0, whatever the inherited
@@ -6055,7 +6061,7 @@ static void applyHardwarePanelRotation(uint8_t lvgl_rot) {
 #elif defined(DISPLAY_ROTATION)
   else if (lvgl_rot == LV_DISP_ROT_180) display.setDisplayRotation((DISPLAY_ROTATION + 2) & 3);
 #endif
-#if defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(HAS_WIO_TRACKER_L2)
+#if defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(HAS_WIO_TRACKER_L2)
   else                                  display.setDisplayRotation(0);
 #elif defined(ATTAKY_MESH_SERIES)
   else                                  display.setDisplayRotation(DISPLAY_ROTATION);
@@ -10245,7 +10251,7 @@ static void kbShowRotateArrows(bool show) {
 // the two pointers is null-guarded, so leaving them null is enough to remove
 // the buttons everywhere — the same pattern the retired s_kb_alt_btn uses.
 // The SenseCAP Indicator's square 480x480 panel does not rotate either.
-#if !defined(HAS_WIO_TRACKER_L2) && !defined(HAS_CROWPANEL_35) && !defined(HAS_CROWPANEL_50) && !defined(HAS_CROWPANEL_P4_101) && \
+#if !defined(HAS_WIO_TRACKER_L2) && !defined(HAS_CROWPANEL_28) && !defined(HAS_CROWPANEL_35) && !defined(HAS_CROWPANEL_50) && !defined(HAS_CROWPANEL_P4_101) && \
     !defined(HAS_SENSECAP_INDICATOR)
 static void kbRotLeftCb(lv_event_t* e) {
   if (lv_event_get_code(e) != LV_EVENT_CLICKED) return;
@@ -18024,7 +18030,7 @@ static void kbLayoutSwitchCb(lv_event_t* e) {
 // Landscape 180. Picking one reboots so the whole UI rebuilds at the chosen
 // resolution (rebootDevice() saves chat history synchronously first).
 #if CAP_ROTATABLE
-#if defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(HAS_WIO_TRACKER_L2) || defined(HAS_CROWPANEL_P4_101)
+#if defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(HAS_WIO_TRACKER_L2) || defined(HAS_CROWPANEL_P4_101)
 static const uint8_t kUiRotOrder[4] = { LV_DISP_ROT_NONE, LV_DISP_ROT_180, LV_DISP_ROT_270, LV_DISP_ROT_90 };
 #else
 static const uint8_t kUiRotOrder[4] = { LV_DISP_ROT_NONE, LV_DISP_ROT_180, LV_DISP_ROT_90, LV_DISP_ROT_270 };
@@ -19532,7 +19538,7 @@ static void buildLockPage() {
                  });
 #endif
   }
-#if !defined(HAS_CROWPANEL_35) && !defined(HAS_CROWPANEL_50) && !defined(HAS_CROWPANEL_P4_101)   // no unlock control there, so no lock to put a PIN on
+#if !defined(HAS_CROWPANEL_28) && !defined(HAS_CROWPANEL_35) && !defined(HAS_CROWPANEL_50) && !defined(HAS_CROWPANEL_P4_101)   // no unlock control there, so no lock to put a PIN on
   {
     // PIN lock: off until switched on here. On asks for a new PIN twice; off and Change
     // ask for the current one first. The switch follows the PIN, not the tap.
@@ -27611,7 +27617,7 @@ static void fmFmtSize64(uint64_t bytes, char* out, size_t outsz) {
 }
 
 #if CAP_SD || defined(TLORA_PAGER)
-#if defined(HAS_CROWPANEL_35)
+#if defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
 static uint8_t sdDriveNumber() { return SD.driveNumber(); }
 #else
 struct SdDriveAccess : fs::SDFS {
@@ -27643,7 +27649,7 @@ static bool sdAdoptLiveMount() {
   sdMountDiagSetMounted(true, g_sd_operating_hz);
   return true;
 }
-#if defined(HAS_CROWPANEL_35)
+#if defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
 static bool sdBeginTracked() {
   const bool begin_ok = SD.begin();
   const bool card_ready = begin_ok && SD.cardType() != CARD_NONE;
@@ -27700,13 +27706,13 @@ static bool fmSdTryMount() {
   // the multi-second mount ladder while the card is out, freezing the UI.
   // Explicit user retries clear the backoff first (fmSdMountOrFormatCb).
   if (s_sd_retry_after_ms && millis() < s_sd_retry_after_ms) return false;
-#if defined(TLORA_PAGER) || defined(HAS_CROWPANEL_35)
+#if defined(TLORA_PAGER) || defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
   if (sdRuntimeLifecycleBusy()) return false;
 #endif
 #if defined(TLORA_PAGER)
   if (!board.sdCardPresent()) return false;
 #endif
-#if defined(HAS_CROWPANEL_35)
+#if defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
   sdMountDiagBegin();
   const bool mounted = sdBeginTracked();
   const uint32_t mounted_hz = 0;
@@ -27840,7 +27846,7 @@ static void fmSdUnmount() {
 // (opendir fails -> operator bool false). Healthy-card cost is sub-ms; a dead
 // card rides out the SPI timeouts once, so callers rate-limit the probe.
 static bool sdProbeAlive() {
-#if defined(HAS_CROWPANEL_35)
+#if defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
   return SD.probeAlive();  // Explicit CMD13; a cached FAT root is not a card probe.
 #else
   File d = SD.open("/");
@@ -27869,7 +27875,7 @@ static void fmSdClickCb(lv_event_t* e) {
   if (s_sd_mounted) fmOpenStorage(&SD, "SD", "/");
 }
 
-#if defined(TLORA_PAGER) || defined(HAS_CROWPANEL_35)
+#if defined(TLORA_PAGER) || defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
 // These ports offer only a non-destructive mount retry. Formatting stays on
 // the computer, rather than using the hardware-SPI formatter on an untested bus.
 static void fmSdRetryMountCb(lv_event_t* e) {
@@ -27877,7 +27883,7 @@ static void fmSdRetryMountCb(lv_event_t* e) {
   s_sd_retry_after_ms = 0;                       // explicit user retry — bypass the backoff
   if (fmSdTryMount() && s_sd_mounted) { fmShowRoots(); return; }
   if (g_lv.task) {
-#if defined(HAS_CROWPANEL_35)
+#if defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
     g_lv.task->showAlert(TR("SD unavailable - insert a FAT32 card and retry"), 3600);
 #else
     g_lv.task->showAlert(TR("SD unreadable - format it as FAT32 on a computer"), 3600);
@@ -29441,7 +29447,7 @@ static void fmShowRoots() {
     fmStyleRow(sd, COLOR_SUB);
     lv_obj_add_event_cb(sd, fmSdMountOrFormatCb, LV_EVENT_CLICKED, nullptr);
   }
-#elif defined(HAS_CROWPANEL_35)
+#elif defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
   if ((s_sd_mounted || millis() >= s_sd_retry_after_ms) && fmSdTryMount()) {
     char sdl[48], cs[16];
     fmFmtSize64(s_sd_size, cs, sizeof cs);
@@ -36688,6 +36694,8 @@ static int wifiScanWatchdogSafe(uint32_t cap_ms, uint16_t per_chan_ms = 300) {
 #define WADA_BOARD_ID "sensecap-indicator"
 #elif defined(HAS_WIO_TRACKER_L2)
 #define WADA_BOARD_ID "wio-tracker-l2"
+#elif defined(HAS_CROWPANEL_28)
+#define WADA_BOARD_ID "crowpanel-28"
 #elif defined(HAS_CROWPANEL_35)
 #define WADA_BOARD_ID "crowpanel-35"
 #elif defined(HAS_CROWPANEL_50)
@@ -38943,7 +38951,7 @@ static void renderMapTiles() {
   } else
 #endif
   if (!s_tiles_fs_ready) {
-#if defined(HAS_TDECK_GT911) || defined(HAS_TDECK_PRO) || defined(TLORA_PAGER) || defined(HAS_THINKNODE_M9) || defined(HAS_CROWPANEL_35)
+#if defined(HAS_TDECK_GT911) || defined(HAS_TDECK_PRO) || defined(TLORA_PAGER) || defined(HAS_THINKNODE_M9) || defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
     // Pager included: under the launcher there's no "tiles" partition, so point the user at the
     // microSD fallback rather than the (launcher-wrong) "reflash the tiles partition" advice.
     // M9 included: its cache PREFERS the built-in 16 GB microSD (every unit ships with one), so
@@ -56727,7 +56735,7 @@ static void openPowerMenu() {
   // ROM force-download leaves a COM that esptool cannot open on HW CDC — hide the entry.
   const int card_w = (sw - 40 > 240) ? 240 : (sw - 40);
   const int p_bh = 34, p_y0 = 28, p_step = 40, card_h = p_y0 + 3 * p_step + 8;
-#elif defined(HAS_THINKNODE_M9) || defined(HAS_WIO_TRACKER_L2) || defined(HAS_CROWPANEL_35)
+#elif defined(HAS_THINKNODE_M9) || defined(HAS_WIO_TRACKER_L2) || defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
   // Power-off row hidden (see below) — 3 rows: Reboot / Download / Cancel.
   const int card_w = (sw - 40 > 240) ? 240 : (sw - 40);
   const int p_bh = 34, p_y0 = 28, p_step = 40, card_h = p_y0 + 3 * p_step + 8;
@@ -57215,7 +57223,7 @@ static void applyVolume(uint8_t pct) {
   if (pct > 100) pct = 100;
   s_volume_pct = pct;   // play paths read the persisted pref; this keeps the slider live
 }
-#elif defined(HAS_WIO_TRACKER_L2) || defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(HAS_CROWPANEL_P4_101) || \
+#elif defined(HAS_WIO_TRACKER_L2) || defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(HAS_CROWPANEL_P4_101) || \
       defined(HAS_SENSECAP_INDICATOR)
 #define HAS_CC_BRIGHTNESS 1
 static uint8_t s_brightness_pct = 63;
@@ -71585,7 +71593,7 @@ static void buildUiTree() {
   };
   // Both buttons use the rotation/refresh glyph; left vs. right position
   // tells the user which way the display will turn.
-#if !defined(HAS_WIO_TRACKER_L2) && !defined(HAS_CROWPANEL_35) && !defined(HAS_CROWPANEL_50) && !defined(HAS_CROWPANEL_P4_101) && \
+#if !defined(HAS_WIO_TRACKER_L2) && !defined(HAS_CROWPANEL_28) && !defined(HAS_CROWPANEL_35) && !defined(HAS_CROWPANEL_50) && !defined(HAS_CROWPANEL_P4_101) && \
     !defined(HAS_SENSECAP_INDICATOR)
   s_kb_rot_left_btn  = makeRotBtn(LV_SYMBOL_REFRESH, kbRotLeftCb);
   s_kb_rot_right_btn = makeRotBtn(LV_SYMBOL_REFRESH, kbRotRightCb);
@@ -77205,7 +77213,7 @@ void UITask::begin(DisplayDriver* display, SensorManager* sensors, NodePrefs* no
     s_tile_fs = &s_tiles_fs;
     s_tile_root[0] = '\0';
   }
-#if defined(HAS_TDECK_GT911) || defined(HAS_CROWPANEL_35)
+#if defined(HAS_TDECK_GT911) || defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
   // Under Launcher there's no "tiles" partition; cache to the SD card instead.
   // main.cpp already mounted the card for SD data storage (boot runs well before
   // ui_task.begin()), so PREFER that live mount via SD.cardType(). Calling
@@ -77456,7 +77464,7 @@ void UITask::begin(DisplayDriver* display, SensorManager* sensors, NodePrefs* no
 #else
   s_lock_on_screen_off = touchPrefsGetLockOnScreenOff();
 #endif
-#if !defined(HAS_CROWPANEL_35) && !defined(HAS_CROWPANEL_50) && !defined(HAS_CROWPANEL_P4_101)   // no unlock control there, so no lock to put a PIN on
+#if !defined(HAS_CROWPANEL_28) && !defined(HAS_CROWPANEL_35) && !defined(HAS_CROWPANEL_50) && !defined(HAS_CROWPANEL_P4_101)   // no unlock control there, so no lock to put a PIN on
   s_pin_on = touchPrefsPinIsSet();
   pinRestoreFails();
 #endif
@@ -77603,7 +77611,7 @@ void UITask::begin(DisplayDriver* display, SensorManager* sensors, NodePrefs* no
 #endif
 #elif (defined(HAS_TDECK_GT911) && !defined(HAS_TDECK_PRO)) || defined(HAS_THINKNODE_M9) || \
       defined(ATTAKY_MESH_SERIES) || defined(HAS_RAK_TAP_V2) || defined(HAS_WIO_TRACKER_L2) || \
-      defined(HAS_CROWPANEL_35) || defined(TLORA_PAGER)
+      defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35) || defined(TLORA_PAGER)
 #if defined(HAS_CROWPANEL_35) || defined(TLORA_PAGER)
       const int draw_band_w = 480;
 #else
@@ -77873,6 +77881,9 @@ void UITask::begin(DisplayDriver* display, SensorManager* sensors, NodePrefs* no
   // Native 320x240 landscape (UI rotation 3), or 240x320 in the portraits (#698).
   g_lv.disp_drv.hor_res  = ui_landscape ? 320 : 240;
   g_lv.disp_drv.ver_res  = ui_landscape ? 240 : 320;
+#elif defined(HAS_CROWPANEL_28)
+    g_lv.disp_drv.hor_res  = s_remote_mode ? (s_remote_landscape ? 400 : 240) : (ui_landscape ? 320 : 240);
+    g_lv.disp_drv.ver_res  = s_remote_mode ? (s_remote_landscape ? 240 : 400) : (ui_landscape ? 240 : 320);
 #elif defined(HAS_CROWPANEL_35)
     g_lv.disp_drv.hor_res  = s_remote_mode ? (s_remote_landscape ? 400 : 240) : (ui_landscape ? 480 : 320);
     g_lv.disp_drv.ver_res  = s_remote_mode ? (s_remote_landscape ? 240 : 400) : (ui_landscape ? 320 : 480);
@@ -77963,7 +77974,7 @@ void UITask::begin(DisplayDriver* display, SensorManager* sensors, NodePrefs* no
       heltecV4CapTouchSetPointRotation(s_ui_rotation); // LVGL won't, so driver does
     }
 #endif
-#if defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(ATTAKY_MESH_SERIES) || defined(HAS_WIO_TRACKER_L2)
+#if defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(ATTAKY_MESH_SERIES) || defined(HAS_WIO_TRACKER_L2)
     else if (!s_remote_mode) {
       // A file-backed portrait preference may not have been loaded at the boot logo.
       // The logo reads the legacy NVS copy before main.cpp moves prefs to SPIFFS. On
@@ -79343,7 +79354,7 @@ static inline void touchScreenBacklight(bool on) {
     ledcWrite(kM9BlPwmChannel, 255);   // inverted: 255 = 0% conduction = off
     touchPanelSleep(true);
   }
-#elif defined(HAS_WIO_TRACKER_L2) || defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(HAS_CROWPANEL_P4_101) || \
+#elif defined(HAS_WIO_TRACKER_L2) || defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(HAS_CROWPANEL_P4_101) || \
       defined(HAS_SENSECAP_INDICATOR)
   // The display owns its backlight (I2C on Wio and the CrowPanel 5.0, PWM on the 3.5,
   // LEDC on the Indicator).
@@ -79877,7 +79888,7 @@ void UITask::wakeScreen() {
 }
 
 void UITask::lockScreen() {
-#if defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(HAS_CROWPANEL_P4_101)
+#if defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(HAS_CROWPANEL_P4_101)
   // No physical unlock button: imported lock preferences must still allow touch wake.
   sleepScreen();
   return;
@@ -81939,12 +81950,12 @@ static void sdHealthTick() {
 #if defined(TLORA_PAGER)
     if (!board.sdCardPresent()) return;  // card-detect says the slot is empty
 #endif
-#if !defined(HAS_CROWPANEL_35)
+#if !defined(HAS_CROWPANEL_28) && !defined(HAS_CROWPANEL_35)
     SPIClass* spi = sdSharedSPI();
     if (!spi) return;
 #endif
     sdMountDiagBegin();
-#if defined(HAS_CROWPANEL_35)
+#if defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
     const bool remounted = sdBeginTracked();
 #elif defined(TLORA_PAGER)
     // The Pager shares this SPIClass with display + radio: one 4 MHz attempt,
@@ -82157,7 +82168,7 @@ void UITask::loop() {
     static bool s_con_input_up = false;
     if (!s_con_input_up) {
       if (heltecV4CapTouchBegin()) {
-#if !defined(HAS_CROWPANEL_35)
+#if !defined(HAS_CROWPANEL_28) && !defined(HAS_CROWPANEL_35)
         heltecV4CapTouchStartBackgroundPoll(8);
 #endif
         s_con_input_up = true;
@@ -82849,7 +82860,7 @@ void UITask::loop() {
       // thing with or without it.
       ssaverStart(now, false);
       _screen_off = true;
-#if !defined(HAS_CROWPANEL_35) && !defined(HAS_CROWPANEL_50) && !defined(HAS_CROWPANEL_P4_101)   // no unlock control there; its lockScreen() only sleeps too
+#if !defined(HAS_CROWPANEL_28) && !defined(HAS_CROWPANEL_35) && !defined(HAS_CROWPANEL_50) && !defined(HAS_CROWPANEL_P4_101)   // no unlock control there; its lockScreen() only sleeps too
       _manual_lock = s_lock_on_screen_off || s_pin_on;
 #endif
     } else
@@ -83030,7 +83041,7 @@ void UITask::loop() {
     }
     if (g_lv.touch_inited) {
       pushDiagLine("touch init ok");
-    #if defined(HAS_WIO_TRACKER_L2) || defined(HAS_CROWPANEL_35)
+    #if defined(HAS_WIO_TRACKER_L2) || defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
       // GT911 (LovyanGFX) and the TCA9535/ADS1115 (Wire) share I2C0 on
       // Wio's GPIO47/48; the CrowPanel 3.5's GT911 shares I2C0 on GPIO15/16.
       // Keep every transaction on loopTask so polling cannot interrupt Wire.

@@ -3,7 +3,9 @@
 #include "DataStore.h"
 #include <helpers/AdvertDataHelpers.h>   // ADV_TYPE_NONE (blank-record skip in loadContacts)
 #if defined(ESP32)
-#if defined(HAS_CROWPANEL_35)
+#if defined(HAS_CROWPANEL_28)
+#include <CrowPanel28SD.h>
+#elif defined(HAS_CROWPANEL_35)
 #include <CrowPanel35SD.h>
 #else
 #include <SD.h>

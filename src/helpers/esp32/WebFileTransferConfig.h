@@ -9,7 +9,7 @@
 #if defined(MULTI_TRANSPORT_COMPANION) && \
     (defined(HAS_TDECK_GT911) || defined(HAS_TDECK_PRO) || defined(TLORA_PAGER) || \
      defined(HAS_THINKNODE_M9) || defined(HELTEC_LORA_V4_R8) || \
-     defined(HAS_WIO_TRACKER_L2) || defined(HAS_CROWPANEL_35) || defined(HAS_TDISPLAY_P4) || defined(HAS_CROWPANEL_P4_101) || \
+     defined(HAS_WIO_TRACKER_L2) || defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35) || defined(HAS_TDISPLAY_P4) || defined(HAS_CROWPANEL_P4_101) || \
      defined(HAS_TANMATSU) || defined(ATTAKY_MESH_SERIES) || defined(HAS_CROWPANEL_50))
   #define WADA_WEB_FILE_TRANSFER 1
 #else

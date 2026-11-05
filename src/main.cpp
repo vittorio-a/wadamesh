@@ -67,8 +67,10 @@ static uint32_t _atoi(const char* sp) {
     #include <SD_MMC.h>
     #include <WioTrackerL2Io.h>
   #endif
-  #if defined(HAS_TDECK_GT911) || defined(HAS_TDECK_PRO) || defined(HELTEC_LORA_V4_R8) || defined(TLORA_PAGER) || defined(HAS_THINKNODE_M9) || defined(HAS_CROWPANEL_35)
-    #if defined(HAS_CROWPANEL_35)
+  #if defined(HAS_TDECK_GT911) || defined(HAS_TDECK_PRO) || defined(HELTEC_LORA_V4_R8) || defined(TLORA_PAGER) || defined(HAS_THINKNODE_M9) || defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
+    #if defined(HAS_CROWPANEL_28)
+    #include <CrowPanel28SD.h> 
+    #elif defined(HAS_CROWPANEL_35)
     #include <CrowPanel35SD.h>
     #else
     #include <SD.h>
@@ -286,7 +288,7 @@ extern volatile uint8_t g_wifi_last_disc_reason;
 
 #include "esp_task_wdt.h"   // task-watchdog reconfigure — see setup() (GH #56)
 
-#if defined(HAS_TDECK_GT911) || defined(HAS_TDECK_PRO) || defined(HELTEC_LORA_V4_R8) || defined(TLORA_PAGER) || defined(HAS_THINKNODE_M9) || defined(HAS_CROWPANEL_35)
+#if defined(HAS_TDECK_GT911) || defined(HAS_TDECK_PRO) || defined(HELTEC_LORA_V4_R8) || defined(TLORA_PAGER) || defined(HAS_THINKNODE_M9) || defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
 // ---- SPIFFS -> SD migration (fixes the beta_36 "lost my profile" upgrades) ----
 // Users who flipped "Store data on SD" before beta_36 ran with the toggle IGNORED
 // (the flag never survived a reboot), so their identity/prefs/contacts kept living
@@ -876,7 +878,7 @@ void setup() {
       uint8_t r = touchPrefsGetBootUiRotation();
       if (r == 1)      display.setDisplayRotation(1);
       else if (r == 3) display.setDisplayRotation(3);
-#if defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(HAS_WIO_TRACKER_L2)
+#if defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35) || defined(HAS_CROWPANEL_50) || defined(HAS_WIO_TRACKER_L2)
       else if (r == 2) display.setDisplayRotation(2);  // portrait 180: the display class maps it (#698)
       else             display.setDisplayRotation(0);  // restore saved portrait
 #elif defined(HELTEC_LORA_V4_R8)
@@ -1120,9 +1122,9 @@ void setup() {
     Serial.println("[BOOT] wio-l2 SD_MMC unavailable; using SPIFFS");
   }
 #endif
-#if defined(HAS_TDECK_GT911) || defined(HAS_TDECK_PRO) || defined(HELTEC_LORA_V4_R8) || defined(TLORA_PAGER) || defined(HAS_THINKNODE_M9) || defined(HAS_CROWPANEL_35)
+#if defined(HAS_TDECK_GT911) || defined(HAS_TDECK_PRO) || defined(HELTEC_LORA_V4_R8) || defined(TLORA_PAGER) || defined(HAS_THINKNODE_M9) || defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
   {
-   #if !defined(HAS_CROWPANEL_35)
+   #if !defined(HAS_CROWPANEL_28) && !defined(HAS_CROWPANEL_35)
    #if defined(TLORA_PAGER)
     extern SPIClass* tloraPagerSharedSPI();    // display/radio/SD shared bus
    #elif defined(HELTEC_LORA_V4_R8)
@@ -1155,7 +1157,7 @@ void setup() {
     // device has no usable SPIFFS, the user opted in, or it's a brand-new device.
     bool want_full_sd = !spiffs_ok || use_sd_pref || fresh_install;
 
-   #if !defined(HAS_CROWPANEL_35)
+   #if !defined(HAS_CROWPANEL_28) && !defined(HAS_CROWPANEL_35)
    #if defined(TLORA_PAGER)
     SPIClass* _spi = tloraPagerSharedSPI();
    #elif defined(HELTEC_LORA_V4_R8)
@@ -1167,7 +1169,7 @@ void setup() {
    #endif
    #endif
     bool sd_mounted = false;
-#if defined(HAS_CROWPANEL_35)
+#if defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
     sdMountDiagBegin();
     const bool begin_ok = SD.begin();
     sd_mounted = begin_ok && SD.cardType() != CARD_NONE;
@@ -1468,7 +1470,7 @@ void setup() {
   #if defined(HAS_WIO_TRACKER_L2)
     SdNvsPrefs::useFile(sd_storage ? (fs::FS*)&SD_MMC : (fs::FS*)&SPIFFS,
                         sd_storage ? "/meshcomod" : "/prefs");
-  #elif defined(HAS_TDECK_GT911) || defined(HAS_TDECK_PRO) || defined(HELTEC_LORA_V4_R8) || defined(TLORA_PAGER) || defined(HAS_THINKNODE_M9) || defined(HAS_CROWPANEL_35)
+  #elif defined(HAS_TDECK_GT911) || defined(HAS_TDECK_PRO) || defined(HELTEC_LORA_V4_R8) || defined(TLORA_PAGER) || defined(HAS_THINKNODE_M9) || defined(HAS_CROWPANEL_28) || defined(HAS_CROWPANEL_35)
     SdNvsPrefs::useFile(sd_storage ? (fs::FS*)&SD : (fs::FS*)&SPIFFS,
                         sd_storage ? "/meshcomod" : "/prefs");
   #else

@@ -85,6 +85,17 @@
   #define CAP_STORE_DOWNLOADS  1   // ...the Store still installs and updates (same-origin proxy)
   #define CAP_FW_UPDATE_CHECK  0   // a reload is the update: no firmware check, no reports
 
+#elif defined(HAS_CROWPANEL_28)          // ===== Elecrow CrowPanel Advance 2.8 (ESP32-S3) =====
+  #define CAP_TOUCH        1   // FT6336U capacitive touch
+  #define CAP_ROTATABLE    1   // ST7789 native portrait, upright landscape = rotation 3
+  #define CAP_LARGE_SCREEN 0   // native 480x320, no upscaling
+  #define CAP_SD           1   // microSD over software SPI, SD-compatible filesystem API, implementation of SDMMC possible
+  #define CAP_FILESYSTEM   1   // internal SPIFFS + tiles LittleFS
+  #define CAP_GPS          1   // optional external UART1 GPS
+  #define CAP_OTA          1
+  #define CAP_LOCK_SCREEN  0   // GPIO0 is LoRa NSS, no separate button to unlock
+  #define CAP_BATTERY      1   // optional INA219
+
 #elif defined(HAS_CROWPANEL_35)          // ===== Elecrow CrowPanel Advance 3.5 (ESP32-S3) =====
   #define CAP_TOUCH        1   // GT911 capacitive touch
   #define CAP_ROTATABLE    1   // ILI9488 native portrait, upright landscape = rotation 3
