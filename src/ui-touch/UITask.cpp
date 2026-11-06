@@ -25047,11 +25047,12 @@ static uint16_t batteryMvSampled() { return g_lv.task ? g_lv.task->getBattMilliV
 // The threshold against an uncalibrated ADC still wants on-device confirmation,
 // exactly as the V4-R8 note above already says.
 static bool batteryIsCharging(uint16_t mv) {
-#if defined(TLORA_PAGER)
+#if defined(TLORA_PAGER) || defined(HAS_CROWPANEL_28)
   // The Pager's BQ25896 charger knows whether USB power is in, and its gauge reads
   // the CELL voltage, which never rises past the charger's target: the voltage test
   // below could not report charging on this board at all. Fall back to it only
   // while the charger is not answering.
+  // adding also crowpanel_28 with the optional INA219
   if (mv != 0) {
     const int ext = board.externalPowerPresent();
     if (ext >= 0) return ext != 0;
@@ -25076,7 +25077,7 @@ static uint16_t batteryMvSmoothed() {
   // Normally hold for 20 s to kill jitter — BUT publish at once when the charge
   // state flips, so plugging/unplugging the charger is recognized immediately
   // instead of waiting out the hold window.
-#if defined(TLORA_PAGER)
+#if defined(TLORA_PAGER) || defined(HAS_CROWPANEL_28)
   // The verdict above is the charger's, not a function of the reading, so comparing
   // two readings never sees it change: watch the charger's own state instead.
   static int s_ext_prev = -2;
